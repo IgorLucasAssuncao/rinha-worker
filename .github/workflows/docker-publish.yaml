@@ -20,7 +20,7 @@ jobs:
             dockerfile: ./Dockerfile
             context: .
           - component: worker
-            dockerfile: ./Worker/Dockerfile
+            dockerfile: ../Worker/Dockerfile
             context: .
 
     permissions:
