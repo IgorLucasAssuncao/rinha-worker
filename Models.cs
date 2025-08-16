@@ -2,54 +2,11 @@
 using System.Diagnostics;
 using System.Numerics;
 using System.Text.Json.Serialization;
+using static rinha_backend.Requests;
+using static rinha_backend.Responses;
 
 namespace rinha_backend
 {
-    internal class Models
-    {
-        internal record struct Payments
-        {
-            public Payments()
-            {
-            }
-
-            public Guid CorrelationId { get; set; }
-            public decimal Amount { get; set; }
-            public bool IsDefault { get; set; } = true;
-            public DateTimeOffset RequestedAt { get; set; }
-        }
-    }
-
-    internal class Requests
-    {
-        internal record struct PaymentsRequest
-        {
-            [JsonPropertyName("correlationId")]
-            public Guid CorrelationId { get; set; }
-
-            [JsonPropertyName("amount")]
-            public decimal Amount { get; set; }
-
-            [JsonPropertyName("requestedAt")]
-            public DateTimeOffset RequestedAt { get; set; }
-
-            public PaymentsRequest(Guid correlationId, decimal amount, DateTimeOffset requestedAt)
-            {
-                CorrelationId = correlationId;
-                Amount = amount;
-                RequestedAt = requestedAt;
-            }
-
-            [JsonConstructor]
-            public PaymentsRequest(Guid correlationId, decimal amount)
-            {
-                CorrelationId = correlationId;
-                Amount = amount;
-                RequestedAt = DateTimeOffset.UtcNow;
-            }
-        }
-    }
-
     internal class Responses
     {
         internal record struct PaymentSummary
@@ -103,21 +60,6 @@ namespace rinha_backend
             {
                 Default = @default;
                 Fallback = fallback;
-            }
-        }
-
-        internal record struct PaymentServiceHealth
-        {
-            [JsonPropertyName("failing")]
-            public bool IsFailing { get; set; }
-
-            [JsonPropertyName("minResponseTime")]
-            public decimal MinResponseTime { get; set; }
-
-            public PaymentServiceHealth(bool isFailing, decimal minResponseTime)
-            {
-                IsFailing = isFailing;
-                MinResponseTime = minResponseTime;
             }
         }
     }

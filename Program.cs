@@ -1,21 +1,17 @@
 ﻿using Dapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
-using MySql.Data.MySqlClient;
 using Npgsql;
 using Npgsql.Internal;
-using Org.BouncyCastle.Asn1.Ocsp;
-using Polly;
-using Polly.Extensions.Http;
 using StackExchange.Redis;
 using System.Diagnostics;
+using System.IO.Pipelines;
 using System.Reflection.Metadata;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Channels;
-using static rinha_backend.Models;
-using static rinha_backend.Requests;
 using static rinha_backend.Responses;
+[module: DapperAot]
 
 namespace rinha_backend
 {
@@ -38,6 +34,13 @@ namespace rinha_backend
                 }
             });
 
+
+            builder.Services.ConfigureHttpJsonOptions(options =>
+            {
+                options.SerializerOptions.TypeInfoResolverChain.Insert(0, JsonContext.Default);
+                options.SerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+            });
+
             builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
             {
                 var redisConnection = builder.Configuration.GetConnectionString("Redis") ?? "redis:6379";
@@ -55,31 +58,7 @@ namespace rinha_backend
                 return ConnectionMultiplexer.Connect(options);
             });
 
-            #region Redis
-
-            builder.Services.AddHostedService<RedisConsumer>();
-
-            builder.Services.AddHostedService<PaymentVerifier>();
-
-            builder.Services.AddSingleton<PaymentDecider>();
-
-            builder.Services.AddSingleton<PaymentProcessor>();
-
-            #endregion
-
             var postgresConn = builder.Configuration.GetConnectionString("postgres")!;
-
-            builder.Services.AddSingleton(provider =>
-            {
-                var dataSourceBuilder = new NpgsqlDataSourceBuilder(postgresConn);
-                return dataSourceBuilder.Build();
-            });
-
-            builder.Services.AddHttpClient("default", o =>
-                o.BaseAddress = new Uri(builder.Configuration.GetConnectionString("default")!));
-
-            builder.Services.AddHttpClient("fallback", o =>
-                o.BaseAddress = new Uri(builder.Configuration.GetConnectionString("fallback")!));
 
             var app = builder.Build();
 
@@ -92,23 +71,30 @@ namespace rinha_backend
                                                    UnixFileMode.OtherRead | UnixFileMode.OtherWrite);
             });
 
+            var apiGroup = app.MapGroup("/");
+            apiGroup.MapGet("/", () => Results.Ok());
+            apiGroup.MapPost("/", () => Results.Ok());
+
             app.MapPost("/payments", async (HttpContext context, [FromServices] IConnectionMultiplexer _redis) =>
             {
-                using var ms = new MemoryStream();
-                await context.Request.Body.CopyToAsync(ms);
-                var rawBody = ms.ToArray();
+                return await Task.Run(async () =>
+                    {
+                        using var ms = new MemoryStream();
+                        await context.Request.Body.CopyToAsync(ms);
+                        var rawBody = ms.ToArray();
 
-                _ = Task.Run(async () =>
-                {
-                    var db = _redis.GetDatabase();
-                    await db.ListRightPushAsync("payments-queue", rawBody, flags: StackExchange.Redis.CommandFlags.FireAndForget).ConfigureAwait(false);
-                });
+                        _ = Task.Run(async () =>
+                        {
+                            var db = _redis.GetDatabase();
+                            await db.ListRightPushAsync("payments-queue", rawBody, flags: StackExchange.Redis.CommandFlags.FireAndForget).ConfigureAwait(false);
+                        });
 
-
-                return Results.Accepted();
+                        return Results.Accepted();
+                    }
+                    );
             });
 
-            app.MapGet("/payments-summary", async (DateTimeOffset? from, DateTimeOffset? to) =>
+            app.MapGet("/payments-summary", async ([FromQuery] DateTimeOffset? from, [FromQuery] DateTimeOffset? to) =>
             {
 
                 await using var conn = new NpgsqlConnection(postgresConn);
@@ -123,11 +109,7 @@ namespace rinha_backend
                       AND(@to IS NULL OR RequestedAt <= @to)
                     GROUP BY IsDefault";
 
-                var results = await conn.QueryAsync<PaymentSummary>(query, new
-                {
-                    from,
-                    to
-                });
+                List<PaymentSummary> results = [.. await conn.QueryAsync<PaymentSummary>(query, new { from, to }).ConfigureAwait(false)];
 
                 var defaultResult = results.FirstOrDefault(r => r.IsDefault);
                 var fallbackResult = results.FirstOrDefault(r => !r.IsDefault);
@@ -149,5 +131,15 @@ namespace rinha_backend
 
             app.Run();
         }
+    }
+
+    [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
+    [JsonSerializable(typeof(PaymentSummary))]
+    [JsonSerializable(typeof(PaymentItem))]
+    [JsonSerializable(typeof(PaymentsSummaryResponse))]
+    [JsonSerializable(typeof(string))]
+    internal partial class JsonContext : JsonSerializerContext
+    {
+
     }
 }

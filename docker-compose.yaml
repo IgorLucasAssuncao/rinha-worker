@@ -1,5 +1,5 @@
 x-service-templates:
-  backend: &backend
+  api: &api
     # image: ghcr.io/igorlucasassuncao/rinha-backend:latest
     build: .
     depends_on:
@@ -7,8 +7,8 @@ x-service-templates:
     deploy:
       resources:
         limits:
-          cpus: "0.45"
-          memory: "85MB"
+          cpus: "0.25"
+          memory: "50MB"
     networks:
       - backend
       - payment-processor
@@ -16,35 +16,53 @@ x-service-templates:
       - socket_data:/tmp
 
 services:
-  backend-1:
-    <<: *backend
+  api-1:
+    <<: *api
     container_name: backend-1
     hostname: backend-1
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - SOCKET_PATH=/tmp/backend_1.sock
-      - ConnectionStrings__default=http://payment-processor-default:8080
-      - ConnectionStrings__fallback=http://payment-processor-fallback:8080
       - ConnectionStrings__postgres=Host=rinha-db;Port=5432;Database=rinha;Username=postgres;Password=postgres;Pooling=true;Minimum Pool Size=10;Maximum Pool Size=50;Connection Lifetime=300;Connection Idle Lifetime=60;Command Timeout=30;Cancellation Timeout=30;No Reset On Close=true;Max Auto Prepare=20;Auto Prepare Min Usages=1;Read Buffer Size=8192;Write Buffer Size=8192;Socket Receive Buffer Size=8192;Socket Send Buffer Size=8192
-  backend-2:
-    <<: *backend
+  api-2:
+    <<: *api
     container_name: backend-2
     hostname: backend-2
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - SOCKET_PATH=/tmp/backend_2.sock
+      - ConnectionStrings__postgres=Host=rinha-db;Port=5432;Database=rinha;Username=postgres;Password=postgres;Pooling=true;Minimum Pool Size=10;Maximum Pool Size=50;Connection Lifetime=300;Connection Idle Lifetime=60;Command Timeout=30;Cancellation Timeout=30;No Reset On Close=true;Max Auto Prepare=20;Auto Prepare Min Usages=1;Read Buffer Size=8192;Write Buffer Size=8192;Socket Receive Buffer Size=8192;Socket Send Buffer Size=8192
+  
+  worker:
+   # image: ghcr.io/igorlucasassuncao/rinha-backend:latest
+   build: ../Worker
+   container_name: worker
+   hostname: worker
+   networks:
+      - backend
+      - payment-processor
+   depends_on:
+    - rinha-db
+    - redis
+   environment:
+      - ASPNETCORE_ENVIRONMENT=Production
       - ConnectionStrings__default=http://payment-processor-default:8080
       - ConnectionStrings__fallback=http://payment-processor-fallback:8080
       - ConnectionStrings__postgres=Host=rinha-db;Port=5432;Database=rinha;Username=postgres;Password=postgres;Pooling=true;Minimum Pool Size=10;Maximum Pool Size=50;Connection Lifetime=300;Connection Idle Lifetime=60;Command Timeout=30;Cancellation Timeout=30;No Reset On Close=true;Max Auto Prepare=20;Auto Prepare Min Usages=1;Read Buffer Size=8192;Write Buffer Size=8192;Socket Receive Buffer Size=8192;Socket Send Buffer Size=8192
-  
+   deploy:
+      resources:
+        limits:
+          cpus: "0.3"
+          memory: "100MB"
+
   nginx:
     image: nginx:alpine
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
       - socket_data:/tmp
     depends_on:
-      - backend-1
-      - backend-2
+      - api-1
+      - api-2
     ports:
       - "9999:8080"
     networks:
@@ -53,10 +71,16 @@ services:
       nofile:
         soft: 65536
         hard: 65536
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8080/ && test -S /tmp/backend_1.sock && test -S /tmp/backend_2.sock"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
     deploy:
       resources:
         limits:
-          cpus: "0.2"
+          cpus: "0.3"
           memory: "30MB"
 
   rinha-db:
@@ -105,7 +129,7 @@ services:
     container_name: redis 
     command: >
       redis-server --save "" --appendonly no --maxclients 1024
-                  --maxmemory 30mb --maxmemory-policy allkeys-lru 
+                  --maxmemory 10mb --maxmemory-policy allkeys-lru 
                   --stop-writes-on-bgsave-error no --rdbcompression no
                   --hz 100 --tcp-backlog 511 --timeout 0
                   --loglevel warning
@@ -119,8 +143,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.2'
-          memory: '30MB'
+          cpus: '0.1'
+          memory: '10MB'
 
 volumes:
  socket_data:
