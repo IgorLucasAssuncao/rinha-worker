@@ -20,7 +20,7 @@ jobs:
             dockerfile: ./Dockerfile
             context: .
           - component: worker
-            dockerfile: ./Dockerfile # Path externo
+            dockerfile: ./Worker/Dockerfile # Path externo
             context: ./Worker # Context externo
 
     permissions:
