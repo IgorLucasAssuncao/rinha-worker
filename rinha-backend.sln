@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.14.36119.2
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "rinha-backend", "rinha-backend.csproj", "{583C59D8-CC8A-4E0D-BD43-B679A7C73E99}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "rinha-backend", "Rinha\rinha-backend.csproj", "{8A667F39-D091-0337-6EF1-733D3CC1B48C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Worker", "..\Worker\Worker.csproj", "{557FB15A-A49C-42F5-954F-BC02CBADD17A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Worker", "Worker\Worker.csproj", "{69C79C25-F84F-479E-3E79-EC68C71F7F70}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -13,14 +13,14 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{583C59D8-CC8A-4E0D-BD43-B679A7C73E99}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{583C59D8-CC8A-4E0D-BD43-B679A7C73E99}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{583C59D8-CC8A-4E0D-BD43-B679A7C73E99}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{583C59D8-CC8A-4E0D-BD43-B679A7C73E99}.Release|Any CPU.Build.0 = Release|Any CPU
-		{557FB15A-A49C-42F5-954F-BC02CBADD17A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{557FB15A-A49C-42F5-954F-BC02CBADD17A}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{557FB15A-A49C-42F5-954F-BC02CBADD17A}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{557FB15A-A49C-42F5-954F-BC02CBADD17A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8A667F39-D091-0337-6EF1-733D3CC1B48C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8A667F39-D091-0337-6EF1-733D3CC1B48C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8A667F39-D091-0337-6EF1-733D3CC1B48C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8A667F39-D091-0337-6EF1-733D3CC1B48C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{69C79C25-F84F-479E-3E79-EC68C71F7F70}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{69C79C25-F84F-479E-3E79-EC68C71F7F70}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{69C79C25-F84F-479E-3E79-EC68C71F7F70}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{69C79C25-F84F-479E-3E79-EC68C71F7F70}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

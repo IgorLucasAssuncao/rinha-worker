@@ -17,8 +17,8 @@ jobs:
       matrix:
         include:
           - component: api
-            dockerfile: ./Dockerfile
-            context: .
+            dockerfile: ./Rinha/Dockerfile
+            context: ./Rinha
           - component: worker
             dockerfile: ./Worker/Dockerfile # Path externo
             context: ./Worker # Context externo

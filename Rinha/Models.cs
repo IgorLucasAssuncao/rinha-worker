@@ -2,7 +2,6 @@
 using System.Diagnostics;
 using System.Numerics;
 using System.Text.Json.Serialization;
-using static rinha_backend.Requests;
 using static rinha_backend.Responses;
 
 namespace rinha_backend
