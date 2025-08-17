@@ -1,6 +1,6 @@
 
 # This stage is used to build the service project
-FROM mcr.microsoft.com/dotnet/sdk:9.0-alpine AS build
+FROM mcr.microsoft.com/dotnet/sdk:10.0.100-preview.7-alpine3.22-aot  AS build
 # Install clang/zlib1g-dev dependencies for publishing to native
 RUN apk update \
     && apk add build-base zlib-dev
@@ -17,7 +17,7 @@ FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
 RUN dotnet publish "./rinha-backend.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=true
 
-FROM mcr.microsoft.com/dotnet/runtime-deps:9.0-alpine AS final
+FROM mcr.microsoft.com/dotnet/runtime-deps:10.0.0-preview.7-alpine3.22 AS final
 WORKDIR /app
 EXPOSE 5000
 COPY --from=publish /app/publish .
