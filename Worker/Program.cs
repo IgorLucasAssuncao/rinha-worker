@@ -1,19 +1,9 @@
 using Dapper;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Options;
 using Npgsql;
-using Npgsql.Internal;
 using Polly;
 using StackExchange.Redis;
-using System.Diagnostics;
-using System.Reflection.Metadata;
-using System.Text.Json;
-using System.Text.Json.Serialization;
-using System.Threading.Channels;
-using static rinha_worker.Models;
-using static rinha_worker.Requests;
-using static rinha_worker.Responses;
 [module:DapperAot]
+
 namespace rinha_worker
 {
     public class Program
