@@ -51,7 +51,7 @@ namespace rinha_worker
                     {
                         var payment = JsonSerializer.Deserialize(msg!, JsonContext.Default.PaymentsRequest);
 
-                        if (payment == null) return;
+                        if (payment == null) continue;
 
                         var paymentResult = await _processor.SendPayment(payment);
 
